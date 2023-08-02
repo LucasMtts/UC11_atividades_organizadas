@@ -1,0 +1,54 @@
+#include "DHTesp.h"
+#include "WiFi.h"
+#include "HTTPClient.h"
+
+
+const char*  ssid = "Wokwi-GUEST";
+const char* password = "";
+int cont = 0;
+const int pinoSensor = 13;
+
+DHTesp sensor;
+
+void setup() {
+  Serial.begin(115200);
+
+
+  WiFi.begin(ssid, password);
+  Serial.print("CONECTANDO A REDE");
+  while(WiFi.status() != WL_CONNECTED){
+    delay(500);
+    Serial.print("...");
+
+  }
+Serial.println();
+Serial.println("CONECTADO A REDE");
+
+sensor.setup(pinoSensor, DHTesp::DHT22);
+
+}
+
+void loop() {
+
+float temp = sensor.getTemperature();
+float humi = sensor.getHumidity();
+
+
+ HTTPClient httpClient;
+
+ httpClient.begin("https://api.thingspeak.com/update?api_key=DU8N5XXY1ALG04NJ&field1=" + String(temp) + "&field2=" + String(humi));
+
+ int httpCode = httpClient.GET();
+
+ if(httpCode > 0){
+    String payload = httpClient.getString();
+    Serial.println(payload);
+  } else{
+    Serial.println("ERRO AO SOLICITAR REQUEST...");
+  }
+ 
+
+ Serial.println(httpCode);
+
+  delay(1000);
+} 
